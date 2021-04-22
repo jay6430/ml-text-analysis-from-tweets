@@ -3,7 +3,7 @@ import streamlit as st
 #import streamlit.components.v1 as comp
 import tweepy
 from textblob import TextBlob
-from wordcloud import WordCloud
+from wordcloud import WordCloud, STOPWORDS
 import pandas as pd
 import numpy as np
 import re
@@ -11,12 +11,14 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import seaborn as sns
 
+
+
 #comp.html("<html><body background="back.jpg"></body></html>")
 
 page_bg_img = '''
 <style>
 body {
-background-image: url("https://image.freepik.com/free-vector/white-background-with-3d-hexagonal-pattern-design_1017-28443.jpg");
+background-color: lightblue;
 background-size: cover;
 }
 </style>
@@ -70,14 +72,13 @@ api = tweepy.API(authenticate, wait_on_rate_limit = True)
 
 
 
-
 def app():
 
 
 	st.title("News Analyzer from Tweets")
 
 
-	activities=["Tweet Analyzer","Generate Twitter Data"]
+	activities=["Tweet Analyzer","Generate Twitter Data","Text analysis"]
 
 	choice = st.sidebar.selectbox("Select Your Activity",activities)
 
@@ -151,7 +152,11 @@ def app():
 					df = pd.DataFrame([tweet.full_text for tweet in posts], columns=['Tweets'])
 					# word cloud visualization
 					allWords = ' '.join([twts for twts in df['Tweets']])
-					wordCloud = WordCloud(width=500, height=300, random_state=21, max_font_size=110).generate(allWords)
+					stopwords = set(STOPWORDS)
+					stopwords.update(["https","t","co","RT","S"])
+                    
+                    
+					wordCloud = WordCloud(stopwords=stopwords, width=500, height=300, random_state=21, max_font_size=110, background_color="white").generate(allWords)
 					plt.imshow(wordCloud, interpolation="bilinear")
 					plt.axis('off')
 					plt.savefig('WC.jpg')
@@ -165,9 +170,6 @@ def app():
 
 
 			else:
-
-
-
 				
 				def Plot_Analysis():
 
@@ -188,9 +190,8 @@ def app():
 					 text = re.sub('#', '', text) # Removing '#' hash tag
 					 text = re.sub('RT[\s]+', '', text) # Removing RT
 					 text = re.sub('https?:\/\/\S+', '', text) # Removing hyperlink
-					 
-					 return text
 
+					 return text
 
 					# Clean the tweets
 					df['Tweets'] = df['Tweets'].apply(cleanTxt)
@@ -230,14 +231,14 @@ def app():
 
 				st.write(sns.countplot(x=df["Analysis"],data=df))
 
+				st.set_option('deprecation.showPyplotGlobalUse', False)
 
 				st.pyplot(use_container_width=True)
 
-				
 
 	
 
-	else:
+	elif choice=="Generate Twitter Data":
 
 		st.subheader("This tool fetches the last 100 tweets from the twitter handel & Performs the following tasks")
 
@@ -309,11 +310,72 @@ def app():
 
 			st.write(df)
 
+            
+            
+	else:
+		st.subheader("This tool directly analyzes the text")
+		content = st.text_area("Enter the text")
+
+
+
+		def get_data(content):
+
+			#posts = api.user_timeline(screen_name=user_name, count = 100, lang ="en", tweet_mode="extended")
+
+			df = pd.DataFrame([content], columns=['Tweets'])
+
+			def cleanTxt(text):
+				text = re.sub('@[A-Za-z0–9]+', '', text) #Removing @mentions
+				text = re.sub('#', '', text) # Removing '#' hash tag
+				text = re.sub('RT[\s]+', '', text) # Removing RT
+				text = re.sub('https?:\/\/\S+', '', text) # Removing hyperlink
+				return text
+
+			# Clean the tweets
+			df['Tweets'] = df['Tweets'].apply(cleanTxt)
+
+
+			def getSubjectivity(text):
+				return TextBlob(text).sentiment.subjectivity
+
+						# Create a function to get the polarity
+			def getPolarity(text):
+				return  TextBlob(text).sentiment.polarity
+
+
+						# Create two new columns 'Subjectivity' & 'Polarity'
+			df['Subjectivity'] = df['Tweets'].apply(getSubjectivity)
+			df['Polarity'] = df['Tweets'].apply(getPolarity)
+
+			def getAnalysis(score):
+				if score < 0:
+					return 'Negative'
+
+				elif score == 0:
+					return 'Neutral'
+
+
+				else:
+					return 'Positive'
+
+		
+						    
+			df['Analysis'] = df['Polarity'].apply(getAnalysis)
+			return df
+
+		if st.button("Show Data"):
+
+			st.success("Analyzing your text")
+
+			df=get_data(content)
+
+			st.write(df)
 
 
 
 
-
+    
+        
 	st.subheader('ArtificialMinds from GDEC |||  Smart Gujarat for New India Hackathon')
 
 
