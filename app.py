@@ -1,9 +1,7 @@
-
 import streamlit as st
-#import streamlit.components.v1 as comp
 import tweepy
 from textblob import TextBlob
-from wordcloud import WordCloud, STOPWORDS
+from wordcloud import WordCloud
 import pandas as pd
 import numpy as np
 import re
@@ -13,30 +11,10 @@ import seaborn as sns
 
 
 
-#comp.html("<html><body background="back.jpg"></body></html>")
-
-page_bg_img = '''
-<style>
-body {
-background-color: lightblue;
-background-size: cover;
-}
-</style>
-'''
-
-st.markdown(page_bg_img, unsafe_allow_html=True)
-
-
-
-
-
-
-
-consumerKey = "PmpUrUVJJ8enACNHMNmLydg8T"
-consumerSecret = "QTRRR1vwJyjAg5ZsXk0hgToMZz3zMG4VoSRwJ3R8ro5wibwSrm"
-accessToken = "985205126175404032-tLLZvtgJxSsioklQXORNCqij2XiAEKt"
-accessTokenSecret = "yam77qumqgtzzI2xUHsYJJfLz7t9n9WjmUUzq3uMVvCDi"
-#Dev. Account: @KADAMJAYV
+consumerKey = "SCXJOdWHrc9zWEFHf1Ha7kmc1"
+consumerSecret = "72QzzKBXBTCFb0Po2Np4yNUrZ7yEHImlfxLyQxcCL3QV8S3CPN"
+accessToken = "1270624123329208320-g6dwbbOVoEPAqDJRpJrfg1smboKJ33"
+accessTokenSecret = "s2ee7pvNL7XUePYEilI30hA3izU6YLj3pDSSWXYqZHOZ8"
 
 
 #Create the authentication object
@@ -72,13 +50,14 @@ api = tweepy.API(authenticate, wait_on_rate_limit = True)
 
 
 
+
 def app():
 
 
-	st.title("News Analyzer from Tweets")
+	st.title("Tweet Analyzer 🔥")
 
 
-	activities=["Tweet Analyzer","Generate Twitter Data","Text analysis"]
+	activities=["Tweet Analyzer","Generate Twitter Data"]
 
 	choice = st.sidebar.selectbox("Select Your Activity",activities)
 
@@ -98,11 +77,11 @@ def app():
 		
 
 
-		raw_text = st.text_area("Enter the exact twitter handle of the user(without @)")
+		raw_text = st.text_area("Enter the exact twitter handle of the Personality (without @)")
 
 
 
-		st.markdown("")
+		st.markdown("<--------     Also Do checkout the another cool tool from the sidebar")
 
 		Analyzer_choice = st.selectbox("Select the Activities",  ["Show Recent Tweets","Generate WordCloud" ,"Visualize the Sentiment Analysis"])
 
@@ -152,11 +131,7 @@ def app():
 					df = pd.DataFrame([tweet.full_text for tweet in posts], columns=['Tweets'])
 					# word cloud visualization
 					allWords = ' '.join([twts for twts in df['Tweets']])
-					stopwords = set(STOPWORDS)
-					stopwords.update(["https","t","co","RT","S"])
-                    
-                    
-					wordCloud = WordCloud(stopwords=stopwords, width=500, height=300, random_state=21, max_font_size=110, background_color="white").generate(allWords)
+					wordCloud = WordCloud(width=500, height=300, random_state=21, max_font_size=110).generate(allWords)
 					plt.imshow(wordCloud, interpolation="bilinear")
 					plt.axis('off')
 					plt.savefig('WC.jpg')
@@ -170,6 +145,9 @@ def app():
 
 
 			else:
+
+
+
 				
 				def Plot_Analysis():
 
@@ -190,8 +168,9 @@ def app():
 					 text = re.sub('#', '', text) # Removing '#' hash tag
 					 text = re.sub('RT[\s]+', '', text) # Removing RT
 					 text = re.sub('https?:\/\/\S+', '', text) # Removing hyperlink
-
+					 
 					 return text
+
 
 					# Clean the tweets
 					df['Tweets'] = df['Tweets'].apply(cleanTxt)
@@ -231,14 +210,14 @@ def app():
 
 				st.write(sns.countplot(x=df["Analysis"],data=df))
 
-				st.set_option('deprecation.showPyplotGlobalUse', False)
 
 				st.pyplot(use_container_width=True)
 
+				
 
 	
 
-	elif choice=="Generate Twitter Data":
+	else:
 
 		st.subheader("This tool fetches the last 100 tweets from the twitter handel & Performs the following tasks")
 
@@ -253,7 +232,7 @@ def app():
 
 
 
-		user_name = st.text_area("Enter the exact twitter handle of the Personality (without @)")
+		user_name = st.text_area("*Enter the exact twitter handle of the Personality (without @)*")
 
 		st.markdown("<--------     Also Do checkout the another cool tool from the sidebar")
 
@@ -310,73 +289,12 @@ def app():
 
 			st.write(df)
 
-            
-            
-	else:
-		st.subheader("This tool directly analyzes the text")
-		content = st.text_area("Enter the text")
-
-
-
-		def get_data(content):
-
-			#posts = api.user_timeline(screen_name=user_name, count = 100, lang ="en", tweet_mode="extended")
-
-			df = pd.DataFrame([content], columns=['Tweets'])
-
-			def cleanTxt(text):
-				text = re.sub('@[A-Za-z0–9]+', '', text) #Removing @mentions
-				text = re.sub('#', '', text) # Removing '#' hash tag
-				text = re.sub('RT[\s]+', '', text) # Removing RT
-				text = re.sub('https?:\/\/\S+', '', text) # Removing hyperlink
-				return text
-
-			# Clean the tweets
-			df['Tweets'] = df['Tweets'].apply(cleanTxt)
-
-
-			def getSubjectivity(text):
-				return TextBlob(text).sentiment.subjectivity
-
-						# Create a function to get the polarity
-			def getPolarity(text):
-				return  TextBlob(text).sentiment.polarity
-
-
-						# Create two new columns 'Subjectivity' & 'Polarity'
-			df['Subjectivity'] = df['Tweets'].apply(getSubjectivity)
-			df['Polarity'] = df['Tweets'].apply(getPolarity)
-
-			def getAnalysis(score):
-				if score < 0:
-					return 'Negative'
-
-				elif score == 0:
-					return 'Neutral'
-
-
-				else:
-					return 'Positive'
-
-		
-						    
-			df['Analysis'] = df['Polarity'].apply(getAnalysis)
-			return df
-
-		if st.button("Show Data"):
-
-			st.success("Analyzing your text")
-
-			df=get_data(content)
-
-			st.write(df)
 
 
 
 
-    
-        
-	st.subheader('ArtificialMinds from GDEC |||  Smart Gujarat for New India Hackathon')
+
+	st.subheader(' ------------------------Created By :  HARIT SHANDILYA ---------------------- :sunglasses:')
 
 
 			
