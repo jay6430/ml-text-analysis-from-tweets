@@ -229,9 +229,10 @@ def app():
 
 
 
+				st.set_option('deprecation.showPyplotGlobalUse', False)
 				st.write(sns.countplot(x=df["Analysis"],data=df))
 
-				st.set_option('deprecation.showPyplotGlobalUse', False)
+				
 
 				st.pyplot(use_container_width=True)
 
