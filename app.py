@@ -229,7 +229,7 @@ def app():
 
 
 
-				st.set_option('deprecation.showPyplotGlobalUse', False)
+				
 				st.write(sns.countplot(x=df["Analysis"],data=df))
 
 				
